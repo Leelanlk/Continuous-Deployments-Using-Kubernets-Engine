@@ -1,25 +1,63 @@
-# Continuous-Deployments-Using-Kubernets-Engine
+## Commands to run the deployment
 
-Heterogeneous deployments typically involve connecting two or more distinct infrastructure environments or regions to address a specific technical or operational need. Heterogeneous deployments are called "hybrid", "multi-cloud", or "public-private", depending upon the specifics of the deployment.
+# Set the compute zone according to the deplyment
 
-### Various business and technical challenges can arise in deployments that are limited to a single environment or region:
+gcloud config set compute/zone 
 
-**Maxed out resources**: In any single environment, particularly in on-premises environments, you might not have the compute, networking, and storage resources to meet your production needs.
+# Create a cluster
 
-**Limited geographic reach**: Deployments in a single environment require people who are geographically distant from one another to access one deployment. Their traffic might travel around the world to a central location.
+gcloud container clusters create bootcamp \
+  --machine-type e2-small \
+  --num-nodes 3 \
+  --scopes "https://www.googleapis.com/auth/projecthosting,storage-rw"
 
-**Limited availability**: Web-scale traffic patterns challenge applications to remain fault-tolerant and resilient.
+# Create auth and hello YAML files
 
-**Vendor lock-in**: Vendor-level platform and infrastructure abstractions can prevent you from porting applications.
+kubectl cretae -f Deployments/auth.yml
+kubectl create -f services/auth.yml
 
-**Inflexible resources**: Your resources might be limited to a particular set of compute, storage, or networking offerings.
+kubectl create -f Deployments/hello.yml
+kubectl create -f services/hello.yml
 
-Heterogeneous deployments can help address these challenges, but they must be architected using programmatic and deterministic processes and procedures. One-off or ad-hoc deployment procedures can cause deployments or processes to be brittle and intolerant of failures. Ad-hoc processes can lose data or drop traffic. Good deployment processes must be repeatable and use proven approaches for managing provisioning, configuration, and maintenance.
+# Verify the Deployment
 
-Three common scenarios for heterogeneous deployment are: 
+kubectl get Deployments
+kubectl get pods
+kubectl get replicasets
 
-***Multi-cloud deployments***
+# Scaling the Deployments
 
-***Fronting on-premises data***
+kubectl scale deployments hello --replicas=5
 
-***Continuous integration/continuous delivery (CI/CD) processes***
+# Rollback from an Update
+
+kubectl rollout pause Deployments/hello   ## pauses the update
+kubectl rollout status Deployments/hello  ## displays rollback status
+kubectl rollout resume Deployments/hello  ## continues the rollback from pause
+kubectl rollout undo Deployments/hello    ## reverts the update
+
+kubectl rollout history Deployments/hello  ## rollback history
+
+## Canary Deployment
+
+A canary deployment consists of a separate deployment with your new version and a service that targets both your normal, stable deployment as well as your canary deployment.
+
+kubectl create -f Deployments/hello-canary.yml
+kubectl get deployments
+
+## Blue-Green Deployment
+
+Rolling updates are ideal because they allow you to deploy an application slowly with minimal overhead, minimal performance impact, and minimal downtime. There are instances where it is beneficial to modify the load balancers to point to that new version only after it has been fully deployed. In this case, blue-green deployments are the way to go.
+
+Kubernetes achieves this by creating two separate deployments; one for the old "blue" version and one for the new "green" version. Use your existing hello deployment for the "blue" version. The deployments will be accessed via a Service which will act as the router. Once the new "green" version is up and running, you'll switch over to using that version by updating the Service.
+
+kubectl create -f services/hello-blue.yml 
+
+# updates the services file to point to the new version app:hello and version:2.0.0
+
+kubectl create -f services/hello-green.yml
+
+# To rollback from green deployment just update the services back to 1.0.0
+
+kubectl create -f sevices/hello-blue.yml
+  
