@@ -14,15 +14,19 @@ gcloud container clusters create bootcamp \
 # Create auth and hello YAML files
 
 kubectl cretae -f Deployments/auth.yml
+
 kubectl create -f services/auth.yml
 
 kubectl create -f Deployments/hello.yml
+
 kubectl create -f services/hello.yml
 
 # Verify the Deployment
 
 kubectl get Deployments
+
 kubectl get pods
+
 kubectl get replicasets
 
 # Scaling the Deployments
@@ -32,8 +36,11 @@ kubectl scale deployments hello --replicas=5
 # Rollback from an Update
 
 kubectl rollout pause Deployments/hello   ## pauses the update
+
 kubectl rollout status Deployments/hello  ## displays rollback status
+
 kubectl rollout resume Deployments/hello  ## continues the rollback from pause
+
 kubectl rollout undo Deployments/hello    ## reverts the update
 
 kubectl rollout history Deployments/hello  ## rollback history
@@ -43,6 +50,7 @@ kubectl rollout history Deployments/hello  ## rollback history
 A canary deployment consists of a separate deployment with your new version and a service that targets both your normal, stable deployment as well as your canary deployment.
 
 kubectl create -f Deployments/hello-canary.yml
+
 kubectl get deployments
 
 ## Blue-Green Deployment
